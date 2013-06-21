@@ -1,4 +1,5 @@
-This binary file contains some baked data. The idea is to provide in the most direct way the data that we need to render some geometry.
+This binary file contains some baked 3D data (read bak3d with an inverted 'E' ) very much ready to be sent down to graphic APIs.
+The idea is to provide in the most direct way the data that we need to render some geometry.
 
 It should not be considered as a scene, nor as a *scene-graph*. The only scene-graph-looking feature is the hierarchy of transformations. But I didn't want to venture to scene graph work for two reasons :
 * the complexity of this file would seriously increase;
