@@ -258,6 +258,10 @@ This contains all the tranformations and children/parent infos
   /// P2 = MrotPivotTransl * MrotPivot * Mrotation * MrotOrient * MrotPivotInv * MscalePivotTransl 
   ///      * MscalePivot * Mscale * MscalePivotInv * P
   /// 
+
+  /// \todo re-organize the fields
+  /// \todo make a smaller simple transform version without Maya's fields
+  /// \todo make a special version for Bones (transformation with tail)
   struct Transform : public Node
   {
       PTR64(FloatArrayPool *pFloatArrays);   ///< array of float coming from curves or anything else derived from FloatArray
@@ -326,6 +330,12 @@ This contains all the tranformations and children/parent infos
 	  /// \note Flag TRANSFCOMP_invalidMatrix : Just tells if the resulting matrices are valid or not
 	  ///
       unsigned int  validComps;
+      //
+      // NOTE: added after 133 but didn't change the version
+      // so I temporarily put this field here to prevent breaking (too much) previous models
+      // and will put it upper starting v1.34...
+      //
+      float     posBoneTail[3];					///< valid only if TRANSFCOMP_isBone
       //
       // 
       //
