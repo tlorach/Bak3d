@@ -36,22 +36,24 @@ namespace bk3d
 ///
 /// \brief dump the layout of a transform object
 ///
-INLINE void Transform_debugDumpLayout(Transform*pT, int l, int level, const char * nodeNameFilter)
+INLINE void Transform_debugDumpLayout(Bone* pT, int l, int level, const char * nodeNameFilter)
 {
-	if(pT->pParent && (l==0)) // if we have a parent : let's not display it when at the level 0
+	if(pT->getParent() && (l==0)) // if we have a parent : let's not display it when at the level 0
 		return;
       if(nodeNameFilter && (strcmp(nodeNameFilter, pT->name)))
           goto passThePrint;
 	for(int i=0	; i<l; i++) PRINTF(( TEXT("\t") ));	
-	PRINTF(( TEXT("TRANSFORM node : ") FSTR TEXT(" (parent: ") FSTR TEXT(" )\n"), pT->name, pT->pParent ? pT->pParent->name : "None"));
+	PRINTF(( TEXT("TRANSFORM node : ") FSTR TEXT(" (parent: ") FSTR TEXT(" )\n"), pT->name, pT->getParent() ? pT->getParent()->name : "None"));
     if(level>0)
     {
 	    for(int i=0; i<l; i++) PRINTF(( TEXT("\t") ));
-	    PRINTF((TEXT("| pos : %f %f %f\n"), pT->pos[0], pT->pos[1], pT->pos[2] ));
-	    for(int i=0; i<l; i++) PRINTF(( TEXT("\t") ));
-	    PRINTF((TEXT("| scale : %f %f %f\n"), pT->scale[0], pT->scale[1], pT->scale[2] ));
-	    for(int i=0; i<l; i++) PRINTF(( TEXT("\t") ));
-	    PRINTF((TEXT("| Rot : %f %f %f\n"), pT->rotation[0], pT->rotation[1], pT->rotation[2]));
+	    PRINTF((TEXT("| pos : %f %f %f\n"), pT->Pos()[0], pT->Pos()[1], pT->Pos()[2] ));
+        if(pT->nodeType == NODE_TRANSFORMSIMPLE)
+	        for(int i=0; i<l; i++) PRINTF(( TEXT("\t") ));
+	            PRINTF((TEXT("| scale : %f %f %f\n"), pT->asTransfSimple()->Scale()[0], pT->asTransfSimple()->Scale()[1], pT->asTransfSimple()->Scale()[2] ));
+        if(pT->nodeType == NODE_TRANSFORM)
+    	    for(int i=0; i<l; i++) PRINTF(( TEXT("\t") ));
+	            PRINTF((TEXT("| Rot : %f %f %f\n"), pT->asTransf()->TransformData().rotation[0], pT->asTransf()->TransformData().rotation[1], pT->asTransf()->TransformData().rotation[2]));
     		
 	    if(pT->pFloatArrays)
 	    {
@@ -66,9 +68,9 @@ INLINE void Transform_debugDumpLayout(Transform*pT, int l, int level, const char
 	    }
     }
 passThePrint:
-	if(pT->pChildren)
-	  for(int i=0; i<pT->pChildren->n; i++)
-		Transform_debugDumpLayout(pT->pChildren->p[i], l+1, level, nodeNameFilter); // recusive display for children...
+	if(pT->getNumChildren()>0)
+	  for(int i=0; i<(int)pT->getNumChildren(); i++)
+		Transform_debugDumpLayout(pT->getChild(i), l+1, level, nodeNameFilter); // recusive display for children...
 }
  
 //------------------------------------------------------------------------------------------
@@ -79,27 +81,28 @@ passThePrint:
 INLINE void FileHeader_debugDumpAll(FileHeader* pH, int level, const char * nodeNameFilter)
 {
 	if(pH->pTransforms) 
-		for(int i=0; i< pH->pTransforms->n; i++)
+		for(int i=0; i< pH->pTransforms->nBones; i++)
 		{
-			Transform_debugDumpLayout(pH->pTransforms->p[i], 0, level, nodeNameFilter);
+			Transform_debugDumpLayout(pH->pTransforms->pBones[i], 0, level, nodeNameFilter);
 		}
 	PRINTF((TEXT("\n")));
 	if(pH->pMaterials)
-		for(int i=0; i< pH->pMaterials->n; i++)
+		for(int i=0; i< pH->pMaterials->nMaterials; i++)
 		{
             if(nodeNameFilter && (strcmp(nodeNameFilter, pH->name)))
               continue;
-			Material *pM = pH->pMaterials->p[i];
+			Material *pM = pH->pMaterials->pMaterials[i];
 			PRINTF((TEXT("Material node : ") FSTR TEXT("\n"), pM->name));
             if(level>0)
             {
-                PRINTF((TEXT("\tdiffuse : %f,%f,%f\n"), pM->diffuse[0], pM->diffuse[1], pM->diffuse[2] ));
-                PRINTF((TEXT("\tspecexp : %f\n"), pM->specexp ));
-                PRINTF((TEXT("\tambient : %f,%f,%f\n"), pM->ambient[0], pM->ambient[1], pM->ambient[2] ));
-                PRINTF((TEXT("\treflectivity : %f\n"), pM->reflectivity ));
-                PRINTF((TEXT("\ttransparency : %f,%f,%f\n"), pM->transparency[0], pM->transparency[1], pM->transparency[2] ));
-                PRINTF((TEXT("\ttranslucency : %f\n"), pM->translucency ));
-                PRINTF((TEXT("\tspecular : %f,%f,%f\n"), pM->specular[0], pM->specular[1], pM->specular[2] ));
+                MaterialData &matData = pM->MaterialData();
+                PRINTF((TEXT("\tdiffuse : %f,%f,%f\n"), matData.diffuse[0], matData.diffuse[1], matData.diffuse[2] ));
+                PRINTF((TEXT("\tspecexp : %f\n"), matData.specexp ));
+                PRINTF((TEXT("\tambient : %f,%f,%f\n"), matData.ambient[0], matData.ambient[1], matData.ambient[2] ));
+                PRINTF((TEXT("\treflectivity : %f\n"), matData.reflectivity ));
+                PRINTF((TEXT("\ttransparency : %f,%f,%f\n"), matData.transparency[0], matData.transparency[1], matData.transparency[2] ));
+                PRINTF((TEXT("\ttranslucency : %f\n"), matData.translucency ));
+                PRINTF((TEXT("\tspecular : %f,%f,%f\n"), matData.specular[0], matData.specular[1], matData.specular[2] ));
                 if(pM->shaderName)
                 { PRINTF((TEXT("\tShader Name : %s\n"), pM->shaderName )); }
                 if(pM->techniqueName)
@@ -111,7 +114,7 @@ INLINE void FileHeader_debugDumpAll(FileHeader* pH, int level, const char * node
                 _PRINTTEXTURE(ambientTexture);
                 _PRINTTEXTURE(reflectivityTexture);
                 _PRINTTEXTURE(transparencyTexture);
-                _PRINTTEXTURE(transluencyTexture);
+                _PRINTTEXTURE(translucencyTexture);
                 _PRINTTEXTURE(specularTexture);
             }
         }
