@@ -1,17 +1,17 @@
-#################
-## Bk3d
-#################
 bk3dExport
-bk3dlib
-bk3dutil
-cmake
-cmake_built
-doxygen
-examples
-PyBk3d
-shared
-CMakeLists.txt
-
+NSight
+bk3dutil/regexp
+examples/bk3dViewer
+examples/GLMeshDisplayTest
+examples/model_Anthony Padilla
+examples/model_Gumi
+examples/resources/*.hdr
+examples/resources/Buggy_PN_v134.bk3d.gz
+examples/resources/gargoyle_anim_tris_noteeth_v133.bk3d.gz
+examples/resources/gargoyle_anim_tris_noteeth_v134.bk3d.gz
+examples/resources/RCcar_v134.bk3d.gz
+examples/SkinnedMeshDX10
+examples/*.gz
 #################
 ## Eclipse
 #################
