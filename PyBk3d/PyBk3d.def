@@ -1,0 +1,4 @@
+LIBRARY		"bk3d"
+
+EXPORTS
+    PyInit_bk3d
