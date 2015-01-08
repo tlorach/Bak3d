@@ -1,3 +1,5 @@
+SET(MODELS_DOWNLOAD_FORCE OFF CACHE BOOL "Forces the download operation of 3D models needed for this demo" )
+SET(MODELS_DOWNLOAD_DISABLED OFF CACHE BOOL "DO NOT try to download 3D models needed for this demo... to avoid getting stuck if slow BW" )
 #####################################################################################
 # Macro for adding a (potentially cuda) executable.
 #
@@ -78,7 +80,7 @@ find_package(nvFx)
 #####################################################################################
 #
 if( OPENGL_FOUND AND GLEW_FOUND OR (APPLE AND GLUT_FOUND))
-    add_subdirectory(bk3dViewer)
+    #add_subdirectory(bk3dViewer)
     add_subdirectory(simpleOpenGL)
 else()
     set(MISSING "")
@@ -100,3 +102,18 @@ endif()
 #   add_subdirectory(dxSimple)
 #endif()
 
+#####################################################################################
+# download model for this demo to run. Avoids using GitHub for this
+# TODO: we need to put the models online. Should happen next week (>Dec.22)
+#
+if(NOT ${MODELS_DOWNLOAD_DISABLED})
+  set(FILELIST 
+  "RCcar_v134.bk3d.gz"
+  )
+  _download_files(
+    "${FILELIST}"
+    "http://developer.download.nvidia.com/ProGraphics/nvpro-samples"
+    "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+    ${MODELS_DOWNLOAD_FORCE}
+  )
+endif()

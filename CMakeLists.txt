@@ -182,15 +182,40 @@ if (NOT APPLE)
   endif()
 endif()
 
-# ===============> GLEW
+#####################################################################################
+# Macro to download a file from a URL
+#
+macro(_download_file _URL _TARGET _FORCE)
+  if(${_FORCE} OR (NOT EXISTS ${_TARGET}))
+    Message(STATUS "downloading ${_URL} ==> ${_TARGET}")
+    file(DOWNLOAD ${_URL} ${_TARGET} SHOW_PROGRESS)
+  else()
+    Message(STATUS "model ${_TARGET} already loaded...")
+  endif()
+endmacro()
+#
+# example: _download_files("${FILELIST}"  "http://..." "${BASE_DIRECTORY}/shared_external/..." ${MODELS_DOWNLOAD_FORCE} )
+#
+macro(_download_files _FILELIST _URL _TARGET _FORCE )
+  foreach(_FILE ${_FILELIST})
+    if(${_FORCE} OR (NOT EXISTS "${_TARGET}/${_FILE}"))
+      Message(STATUS "downloading ${_URL}/${_FILE} ==> ${_TARGET}")
+      file(DOWNLOAD ${_URL}/${_FILE} ${_TARGET}/${_FILE} SHOW_PROGRESS)
+    else()
+      Message(STATUS "model ${_FILE} already loaded...")
+    endif()
+  endforeach(_FILE)
+endmacro()
+
+# ===============>
 add_subdirectory(bk3dinfo)
 add_subdirectory(bk3dlib)
 add_subdirectory(bk3dutil)
 add_subdirectory(examples)
 add_subdirectory(PyBk3d)
-if(MAYA_FOUND)
-  add_subdirectory(bk3dExport)
-endif()
+#if(MAYA_FOUND)
+#  add_subdirectory(bk3dExport)
+#endif()
 
 ##################################################################
 # INSTALL
