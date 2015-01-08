@@ -236,8 +236,7 @@ bool MyWindow::init()
     // Load a model
     //
     //---------------
-    //#define MODEL "/RCcar_v134.bk3d.gz"
-    #define MODEL "/NVShaderBall_134.bk3d.gz"
+    #define MODEL "/RCcar_v134.bk3d.gz"
     //---------------
     char tmpstr[300];
     if(argc > 1)
@@ -248,8 +247,12 @@ bool MyWindow::init()
     LOGI("Loading Mesh... %s\n", tmpstr);
     if(!(meshFile = bk3d::load(tmpstr)))
     {
-        LOGE("error in loading mesh\n");
-        return false;
+        
+        if(!(meshFile = bk3d::load(RESOURCE_DIR "/NVShaderBall_134.bk3d.gz")))
+        {
+            LOGE("error in loading mesh\n");
+            return false;
+        }
     }
     // To be Core OpenGL, we must create some buffer objects
     // Check the bounding boxes and adjust scaling
