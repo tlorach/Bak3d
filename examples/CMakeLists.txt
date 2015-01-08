@@ -69,7 +69,7 @@ set(NV_IMAGE_SOURCES
 
 #####################################################################################
 # folder for various models and textures
-find_path(RESOURCE_DIR NV_Shaderball_v133.bk3d.gz "resources")
+find_path(RESOURCE_DIR README.md "resources")
 
 ##################################################################
 # Shared folder
