@@ -22,7 +22,7 @@ if (WIN32)
     if(ARCH STREQUAL "x86")
       find_library( PYTHON_LIBRARY
           NAMES
-              python26 python27 python30 python31 python32 python33
+              python26 python27 python30 python31 python32 python33 python34
           PATHS
               ${PYTHONHOME}/libs
               $ENV{PYTHONHOME}/libs
@@ -30,7 +30,7 @@ if (WIN32)
     else()
       find_library( PYTHON_LIBRARY
           NAMES
-              python26 python27 python30 python31 python32 python33
+              python26 python27 python30 python31 python32 python33 python34
           PATHS
               ${PYTHONHOME}/libs
               $ENV{PYTHONHOME}/libs
