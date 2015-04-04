@@ -14,6 +14,8 @@ if (WIN32)
         NAMES
             Python.h
         PATHS
+            ${PYTHON_LOCATION}/include
+            $ENV{PYTHON_LOCATION}/include
             ${PYTHONHOME}/include
             $ENV{PYTHONHOME}/include
             DOC "The directory where Python.h resides" )
@@ -24,6 +26,8 @@ if (WIN32)
           NAMES
               python26 python27 python30 python31 python32 python33 python34
           PATHS
+              ${PYTHON_LOCATION}/libs
+              $ENV{PYTHON_LOCATION}/libs
               ${PYTHONHOME}/libs
               $ENV{PYTHONHOME}/libs
               DOC "The PYTHON library")
@@ -32,6 +36,8 @@ if (WIN32)
           NAMES
               python26 python27 python30 python31 python32 python33 python34
           PATHS
+              ${PYTHON_LOCATION}/libs
+              $ENV{PYTHON_LOCATION}/libs
               ${PYTHONHOME}/libs
               $ENV{PYTHONHOME}/libs
               DOC "The PYTHON library")
@@ -43,6 +49,8 @@ if (${CMAKE_HOST_UNIX})
         NAMES
             Python.h
         PATHS
+            ${PYTHON_LOCATION}/include
+            $ENV{PYTHON_LOCATION}/include
             ${PYTHONHOME}/include
             $ENV{PYTHONHOME}/include
             /usr/include
@@ -56,6 +64,8 @@ if (${CMAKE_HOST_UNIX})
         NAMES
             python
         PATHS
+            ${PYTHON_LOCATION}/lib
+            $ENV{PYTHON_LOCATION}/lib
             ${PYTHONHOME}/lib
             $ENV{PYTHONHOME}/lib
             /usr/lib64

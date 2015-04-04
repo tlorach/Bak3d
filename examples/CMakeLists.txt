@@ -80,7 +80,7 @@ find_package(nvFx)
 #####################################################################################
 #
 if( OPENGL_FOUND AND GLEW_FOUND OR (APPLE AND GLUT_FOUND))
-    #add_subdirectory(bk3dViewer)
+    add_subdirectory(bk3dViewer)
     add_subdirectory(simpleOpenGL)
 else()
     set(MISSING "")
