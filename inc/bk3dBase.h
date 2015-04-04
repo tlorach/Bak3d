@@ -39,6 +39,7 @@
  **/
 #define RAWMESHVERSIONSTR "134"
 #define RAWMESHVERSION 0x134
+#define LONG int
 
 #pragma warning(disable: 4505)
 #pragma warning(disable: 4311)
@@ -468,13 +469,13 @@ Mesh related structures
   ///
   struct RelocationTable : public Node
   {
-    long            numRelocationOffsets;      ///< data telling where to resolve pointers
+    LONG            numRelocationOffsets;      ///< data telling where to resolve pointers
     int                : 32;
     /// in the case of file mapping (mmap or windows equivalent), we may change values in the
     /// file at ptr locations and thus lost the offsets. Which is why we should keep them here, too
     struct Offsets {
-        unsigned long ptrOffset; ///< offset where is located the ptr
-        unsigned long offset; ///< offset used to recompute the ptr
+        unsigned LONG ptrOffset; ///< offset where is located the ptr
+        unsigned LONG offset; ///< offset used to recompute the ptr
     };
     PTR64(Offsets     *pRelocationOffsets);      ///< data telling where to resolve pointers
 
@@ -626,21 +627,21 @@ INLINE void FileHeader::resolvePointers(void* pBufferArea)
     for(int i=0; i < pRelocationTable->numRelocationOffsets; i++)
     {
         char* ptr = (char*)this;
-        unsigned long offs = pRelocationTable->pRelocationOffsets[i].ptrOffset;
+        unsigned LONG offs = pRelocationTable->pRelocationOffsets[i].ptrOffset;
         if(offs == 0)
             continue;
         if(offs >= nodeByteSize)
             ptr = (char*)pBufferArea + offs - nodeByteSize;
         else
             ptr += offs;
-        unsigned long *ptr2 = (unsigned long *)ptr;
+        unsigned long long *ptr2 = (unsigned long long *)ptr;
         if(*ptr2)
         {
-            unsigned long o = pRelocationTable->pRelocationOffsets[i].offset;
+            unsigned long long o = pRelocationTable->pRelocationOffsets[i].offset;
             if(o >= nodeByteSize)
-                *ptr2 = (unsigned long)(((char*)pBufferArea) + o - nodeByteSize);
+                *ptr2 = (unsigned long long)(((char*)pBufferArea) + o - nodeByteSize);
             else
-            *ptr2 = (unsigned long)(((char*)this) + o);
+            *ptr2 = (unsigned long long)(((char*)this) + o);
         }
     }
 }
@@ -654,17 +655,17 @@ INLINE void FileHeader::cleanBufferPointers(void* pBufferArea, bool bPutBackOffs
     for(int i=0; i < pRelocationTable->numRelocationOffsets; i++)
     {
         char* ptr = (char*)this;
-        unsigned long offs = pRelocationTable->pRelocationOffsets[i].ptrOffset;
+        unsigned LONG offs = pRelocationTable->pRelocationOffsets[i].ptrOffset;
         if(offs == 0)
             continue;
         if(offs >= nodeByteSize)
             ptr = (char*)pBufferArea + offs - nodeByteSize;
         else
             ptr += offs;
-        unsigned long *ptr2 = (unsigned long *)ptr;
+        unsigned LONG *ptr2 = (unsigned LONG *)ptr;
         if(*ptr2)
         {
-            unsigned long o = pRelocationTable->pRelocationOffsets[i].offset;
+            unsigned LONG o = pRelocationTable->pRelocationOffsets[i].offset;
             if(o >= nodeByteSize)
         // TODO: put back offsets + 64 bits ptr value
                 *ptr2 = NULL;//o;
@@ -698,10 +699,10 @@ INLINE void FileHeader::restorePointerOffsets(void* pBufferArea)
             ptr = (char*)pBufferArea + offs - nodeByteSize;
         else
             ptr += offs;
-        unsigned long *ptr2 = (unsigned long *)ptr;
+        unsigned LONG *ptr2 = (unsigned LONG *)ptr;
         if(*ptr2)
         {
-            unsigned long o = pRelocationTable->pRelocationOffsets[i].offset;
+            unsigned LONG o = pRelocationTable->pRelocationOffsets[i].offset;
             *ptr2 = o;
         }
     }
@@ -727,7 +728,7 @@ INLINE static FileHeader * load(const char * fname, void ** pBufferMemory=NULL, 
       EPRINTF((TEXT("Error : couldn't load ") FSTR TEXT("\n"), fname));
         return NULL;
     }
-	unsigned long realsize = 0;
+	unsigned LONG realsize = 0;
 #ifdef NOGZLIB
     fseek(fd, 0, SEEK_END);
 	realsize = ftell(fd);

@@ -787,8 +787,8 @@ struct Material : public Node
 		PTR64(char*	filename);   ///< filename of the texture. Or whatever helps to find it in whathever storage
         union {
             struct {
-		        unsigned long userHandle; ///< when the application found the texture, one may want to keep track of resource references with this
-		        unsigned long userData; ///< when the application found the texture, one may want to keep track of resource references with this
+		        unsigned LONG userHandle; ///< when the application found the texture, one may want to keep track of resource references with this
+		        unsigned LONG userData; ///< when the application found the texture, one may want to keep track of resource references with this
             };
             char* userPtr; /// < or the same area as a pointer (32 or 64 bits)
         };
@@ -804,7 +804,7 @@ struct Material : public Node
 	Texture	specularTexture;
     /// @}
 	/// can be used after load for storing handles... etc. (effect & technique, for example)
-	unsigned long userData[2];
+	unsigned LONG userData[2];
 	/// Extra parameters : user-defined parameters. For example uniform values for the shader shaderName
 	PTR64(MaterialAttrPool*	pAttrPool);
 	/// Basic methods
