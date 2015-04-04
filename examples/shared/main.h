@@ -365,6 +365,8 @@ public:
 
 };
 
+extern int getKeyMods();
+
 extern int  sample_main(int argc, const char**argv);
 
 // sample-specific implementation, called by logMessage. For example to redirect the message to a specific window or part of the viewport

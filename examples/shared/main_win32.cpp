@@ -289,7 +289,7 @@ bool WINinternal::initBase(const NVPWindow::ContextFlags* cflags)
     return true;
 }
 
-static int getKeyMods()
+int getKeyMods()
 {
   int mods = 0;
 
@@ -1076,7 +1076,7 @@ void logMessage(int level, const char * fmt, ...)
         if(fmt2) free(fmt2);
         fmt2 = (char*)malloc(fmt2_sz);
     }
-    char *prefix = "LOG Message >> ";
+    char *prefix = "";//LOG Message >> ";
     switch(level)
     {
     case LOGLEVEL_WARNING:
