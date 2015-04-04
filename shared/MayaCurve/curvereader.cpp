@@ -29,6 +29,7 @@
 
 #include "curvereader.h"
 #include <algorithm>
+#include "nv_math.h"
 
 #define Deg2Rad 0.0174532925199432958
 #define FAILURE(msg) \
@@ -467,6 +468,8 @@ CurveVector *CurvePool::newCVFromFile(const char *  fname, char *  overloadname)
 			AsTangentType(s1, tt1);
 			AsTangentType(s2, tt2);
 			cr->addKey(frm, val, tt1, tt2, f1, f2, f3, f4);
+            if(frm > endTime)
+                endTime = frm;
 		}
 		for(i=0; i<dim; i++)
 		{
@@ -560,7 +563,10 @@ void CurvePool::updateToClosestKey(bool backward)
 	{
 		CurveVector *cv = icv->second;
 		float t = cv->getClosestKeyTime(curTime, backward);
-        if(((fabs(t-curTime)>0)&&(fabs(t-curTime) < (newTime-curTime)))||bFirstTime) {
+        if(bFirstTime 
+          || (backward   && (newTime > t))
+          ||((!backward) && (newTime < t)) )
+        {
             newTime = t;
             bFirstTime = false;
         }
@@ -572,7 +578,10 @@ void CurvePool::updateToClosestKey(bool backward)
 	{
 		CurveQuat *cv = iqcv->second;
 		float t = cv->getClosestKeyTime(curTime, backward);
-        if(((fabs(t-curTime)>0)&&(fabs(t-curTime) < (newTime-curTime)))||bFirstTime) {
+        if(bFirstTime 
+          || (backward   && (newTime > t))
+          ||((!backward) && (newTime < t)) )
+        {
             newTime = t;
             bFirstTime = false;
         }
@@ -1345,7 +1354,7 @@ bool CurveQuat::find (float time, int *index)
 void    CurveQuat::evaluate(float time, float *v)
 {
 	bool withinInterval = false;
-	Key *nextKey;
+	Key *nextKey = NULL;
 	int index = 0;
 	float value = 0.0;
 
@@ -1413,13 +1422,14 @@ void    CurveQuat::evaluate(float time, float *v)
 		}
 	}
 
-	/* if we are in a new segment, pre-compute parameters */
-	if (m_lastInterval != (index - 1))
-    {
+	/* if we are in a new segment, pre-compute and cache the bezier parameters */
+	if (m_lastInterval != (index - 1)) {
 		m_lastInterval = index - 1;
 		m_lastIndex = m_lastInterval;
 		m_lastKey = &(m_keys[m_lastInterval]);
-        //...
+		m_isStep = false;
+		nextKey = &(m_keys[index]);
+            // TODO: setup some params for smooth quat transitions
 	}
 
 	/* finally we can evaluate the segment */
@@ -1431,11 +1441,20 @@ void    CurveQuat::evaluate(float time, float *v)
         return;
 	}
 	else {
+        float range = nextKey->time - m_lastKey->time;
+        float s = time-m_lastKey->time;
+        s /= range;
 		//value = lerp... TODO
-        memcpy(m_cvvals, m_lastKey->value, sizeof(float)*4);
-        if(v) memcpy(v, m_cvvals, sizeof(float)*4);
-        if(m_bindPtr) memcpy(m_bindPtr, m_cvvals, sizeof(float)*4);
-        if(m_pDirty) *m_pDirty = true;
+        nv_math::quatf* pQ = (nv_math::quatf*)m_cvvals;
+        nv_math::slerp_quats(*pQ, s
+            , *(nv_math::quatf*)m_lastKey->value
+            , *(nv_math::quatf*)nextKey->value );
+        if(v)
+            memcpy(v, m_cvvals, sizeof(float)*4);
+        if(m_bindPtr)
+            memcpy(m_bindPtr, m_cvvals, sizeof(float)*4);
+        if(m_pDirty)
+            *m_pDirty = true;
         return;
 	}
 

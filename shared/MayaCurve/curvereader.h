@@ -186,8 +186,11 @@ public:
 	void updateAllInfinities(float time, bool evalPre);
     void updateToClosestKey(bool backward=false);
     float getCurTime() { return curTime; }
+    float getEndTime() { return endTime; }
+    float setEndTime(float f) { return endTime = f; }
 private:
     float curTime;
+    float endTime;
 	struct ltstr
 	{
 	  bool operator()(const char * s1, const char * s2) const
