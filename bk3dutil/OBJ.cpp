@@ -43,6 +43,8 @@ bool readOBJ(const char* fullInStr, const char* singleName, bk3dlib::PFileHeader
     fileHeader->AttachMesh(mesh);
 
     int matcount = objModel->getMaterialCount();
+	if(matcount == 0)
+		matcount = 1;
     struct Material
     {
         const char* name;
@@ -56,7 +58,10 @@ bool readOBJ(const char* fullInStr, const char* singleName, bk3dlib::PFileHeader
     Material *pMat = new Material[matcount];
     for(int m=0; m<matcount; m++)
     {
-        objModel->getMaterial(m, &pMat[m].offset, &pMat[m].name);
+        if(!objModel->getMaterial(m, &pMat[m].offset, &pMat[m].name))
+		{
+			pMat[m].name = "None";
+		}
         pMat[m].bufferIdxVtx = bk3dlib::Buffer::CreateIdxBuffer("idxvtx");
         mesh->AttachIndexBuffer(pMat[m].bufferIdxVtx);
         pMat[m].bufferIdxNormals = bk3dlib::Buffer::CreateIdxBuffer("idxnorm");
@@ -108,13 +113,13 @@ bool readOBJ(const char* fullInStr, const char* singleName, bk3dlib::PFileHeader
         mesh->DetachBuffer(pMat[m].bufferIdxVtx);
 	    pMat[m].bufferIdxVtx->Destroy();
         mesh->DetachBuffer(bufferVtx);
-	    bufferVtx->Destroy();
         mesh->DetachBuffer(bufferNormals);
-	    bufferNormals->Destroy();
         mesh->DetachBuffer(pMat[m].bufferIdxNormals);
 	    pMat[m].bufferIdxNormals->Destroy();
     #endif
     }
+	bufferVtx->Destroy();
+	bufferNormals->Destroy();
 
 	if(verbose) printf( "computing bounding volumes...\n");
 	mesh->ComputeBoundingVolumes(bufferVtx2);
