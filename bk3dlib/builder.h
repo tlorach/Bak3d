@@ -1349,9 +1349,9 @@ public:
 /*------------------------------------------------------------------
     to order groups of indices
   ------------------------------------------------------------------*/
-
 struct IdxSet {
     std::vector<unsigned int> index;
+	unsigned int newIndex;
 
     void clearIndex()
     {
@@ -1375,6 +1375,15 @@ struct IdxSet {
         return true;
     }
 
+    bool operator== (const IdxSet &rhs) {
+        assert(index.size() == rhs.index.size());
+        for(unsigned int i=0; i<index.size(); i++)
+        {
+            if (index[i] != rhs.index[i])
+                return false;
+        }
+        return true;
+	}
     bool operator< ( const IdxSet &rhs) const {
         assert(index.size() == rhs.index.size());
         for(unsigned int i=0; i<index.size(); i++)
@@ -1387,8 +1396,6 @@ struct IdxSet {
         return false;
     }
 };
-
-
 /*------------------------------------------------------------------
     Buffers
   ------------------------------------------------------------------*/

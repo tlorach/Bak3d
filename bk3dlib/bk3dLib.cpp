@@ -4140,7 +4140,6 @@ CBuffer::~CBuffer()
     m_divisor=1;
     m_type = bk3dlib::UNKNOWN;
     m_pOwner = NULL;
-    m_idxset.clearIndex();
     m_bk3dptr = NULL;
     m_FVals.clear();
     m_UIVals.clear();
