@@ -270,8 +270,10 @@ bool Model::loadObjFromFile( const char *file, Model &m) {
                 break;
             case 'g':
                 m._groups.push_back(OffsetAndName(m._pIndex.size(), std::string(getLine(buf, BUF_SIZE, fp)) ));
+                break;
             case 'o':
                 m._objects.push_back(OffsetAndName(m._pIndex.size(), std::string(getLine(buf, BUF_SIZE, fp)) ));
+                break;
             default:
 				skipLine( buf, BUF_SIZE, fp);
 
