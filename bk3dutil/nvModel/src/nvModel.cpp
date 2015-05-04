@@ -623,6 +623,8 @@ void Model::computeNormals() {
 
     //iterate over the faces, computing the face normal and summing it them
     for ( int ii = 0; ii < (int)_pIndex.size(); ii += 3) {
+		if((_pIndex[ii+2]*_posSize) >= _positions.size())
+			continue;
         vec3f p0(&_positions[_pIndex[ii]*_posSize]);
         vec3f p1(&_positions[_pIndex[ii+1]*_posSize]);
         vec3f p2(&_positions[_pIndex[ii+2]*_posSize]);
