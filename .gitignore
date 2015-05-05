@@ -1,6 +1,5 @@
 cmake_build
 cmake_build_w32
-bk3dExport
 NSight
 bk3dutil/regexp
 examples/bk3dViewer

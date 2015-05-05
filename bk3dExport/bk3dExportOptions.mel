@@ -1,0 +1,487 @@
+global proc string [] addBlindDataItems(int $vals[])
+{
+  string $results[];
+  string	$pObjects[] = `selectedNodes`;
+	for ($object in $pObjects)
+	{
+    string $children[] = `listRelatives -children -type "mesh" $object`;
+	  for ($child in $children)
+	  {
+  		string	$cons[] = `listConnections -t polyBlindData $child`;
+  		for($con in $cons)
+  		{
+  		  string $item = ($con + ".typeId");
+    		$vals[size($vals)] = `getAttr $item`;
+  		  $item = `getAttr $item`;
+  		  string $attribs[] = `listAttr -ud $con`;
+  		  for($attr in $attribs)
+  		  {
+  		    string $parts[];
+  		    tokenize($attr, ".", $parts);
+    		  if(size($parts) > 1)
+    		  {
+  		      $item = ($item + "_" + $parts[1]);
+  		    }
+  		  }
+  		  $results[size($results)] = $item;
+  		}
+	  }
+	}
+	return $results;
+};
+
+proc SetSlotNumber(string $combo)
+{
+      optionMenu $combo;
+      if($combo == "slot0")
+      {
+        menuItem -label "0";
+      }else{
+        menuItem -label "0";
+        menuItem -label "1";
+        menuItem -label "2";
+        menuItem -label "3";
+      }
+}
+proc int GetSlotNumber(string $combo)
+{
+  return `optionMenu -q -select $combo`;
+}
+proc SetAttribChoice(string $combo, string $moreattrs[], int $IDs[])
+{
+      optionMenu $combo;
+      if(($combo == "attrib0")||($combo == "bsattrib0"))
+      {
+        menuItem -label "position";
+        menuItem -label "vertexID";
+      }else{
+        menuItem -label "-";
+        menuItem -label "position";
+        menuItem -label "color";
+        menuItem -label "normal";
+        menuItem -label "tangent";
+        menuItem -label "binormal";
+        menuItem -label "facenormal";
+        menuItem -label "texcoord0";
+        menuItem -label "texcoord1";
+        menuItem -label "texcoord2";
+        menuItem -label "texcoord3";
+        menuItem -label "bonesoffsets";
+        menuItem -label "bonesweights";
+        menuItem -label "vertexID";
+        int $i = 0;
+        for($attr in $moreattrs)
+        {
+          menuItem -data $IDs[$i] -label $attr;
+        }
+      }
+};
+proc int GetAttribState(string $combo)
+{
+  if(($combo == "attrib0")||($combo == "bsattrib0"))
+  {
+	return `optionMenu -q -select $combo` + 1;
+  }
+  return `optionMenu -q -select $combo`;
+}
+proc SetAttribState(string $combo, int $val)
+{
+  if(($combo == "attrib0")||($combo == "bsattrib0"))
+  {
+    optionMenu -edit -select 1 $combo;
+  }else{
+    if($val < 1) $val = 1;
+    optionMenu -edit -select $val $combo;
+  }
+}
+proc SetSlotState(string $combo, int $val)
+{
+  if($val < 1) $val = 1;
+  optionMenu -edit -select $val $combo;
+}
+
+//
+//	Description:
+//		This script posts the anim export options.
+//
+//	Parameters:
+//		$parent	- the elf parent layout for this options layout. It is
+//					always a scrollLayout.
+//		$action	- the action that is to be performed with this invokation
+//					of this proc. Valid options are:
+//						"query" - construct the options string and pass it
+//									to the resultCallback.
+//						"post"	- post all the elf controls.
+//		$resultCallback	-
+//				This is the proc to be called with the result string. 
+//				resultCallback ( string $optionsString )
+//
+//	Returns:
+//		1 if successfull.
+//		0 otherwise.
+//
+global proc int bk3dExporterOptions( 	string $parent, 
+									string $action,
+									string $initialSettings, 
+									string $resultCallback )
+{
+	int 	$result;
+	string 	$currentOptions;
+	string 	$optionList[];
+	string 	$optionBreakDown[];
+	string	$dbgstr;
+	int		$index;
+	
+	optionVar -intValue meshExportAnimationFile true;
+
+  //
+  // post ACTION
+  //
+	if ($action == "post") {
+		print "NVBinaryMeshExporterOptions(post)...\n";
+		setUITemplate -pushTemplate DefaultTemplate;
+		setParent $parent;
+
+		columnLayout meshExportMultiObjLayout;
+
+			//	Make the layout invisible during the control creation.
+			//
+			columnLayout -e -vis false meshExportMultiObjLayout;
+		
+			formLayout meshExportForm;
+			rowColumnLayout -numberOfColumns 2 
+						-rat 1 "top" 5
+						-cal 1 "right" -cw 1 250 -cw 2 250 meshExportFileOptsLayout;
+						
+			checkBox 	-label "Do Stripifier"
+						-annotation "call NV stripifier so the mesh is turned to a set of triangles-strip instead of a set of indexed triangles"
+						-v off meshExportStripChk;
+
+			//text -l "";
+
+			/*checkBox 	-label "Do MeshMender" -align "left"
+						-annotation "compute Tangent/Binormals through MeshMender"
+						-v off meshExportMeshMenderChk;*/
+
+			checkBox 	-label "export Multiple index" -align "left"
+						-enable false
+						-annotation "TODO. NOT WORKING. Will use attribs for VtxPos + multiple index. Then you'll fetch attribs with these index..."
+						-v off multiIndexChk;
+
+			checkBox 	-label "use original Mesh (buggy for now...)" -align "left"
+						-annotation "Gather vertices *before* any transformer. Skinn, cluster etc."
+						-v off originalMeshChk;
+
+			checkBox 	-label "vtx in worldspace(use if for skinning)" -align "left"
+						-annotation "compute worldspace vtx pos instead of keeping it relative to its transformation. Needed for skinning."
+						-v off worldPosChk;
+
+			checkBox 	-label "One Primitive group" -align "left"
+						-annotation "don't export misc groups of primitives (one prim grp == one drawcall with one shader)"
+						-v off meshExportNoShadersChk;
+						
+			checkBox 	-label "Adjacent Triangles" -align "left"
+						-annotation "Bring additional adjacency info to the triangle. Triangle will then have 3+3 indices"
+						-v off meshExportAdjTrisChk;
+
+			checkBox 	-label "Blendshapes as deltas" -align "left"
+						-annotation "Provide blendshapes as the difference with the reference shape. Res = Ref + alpha*BS"
+						-v off meshExportDeltaBSChk;
+
+			checkBox 	-label "Keep Quad Prims" -align "left"
+						-annotation "Keep the Quads if the model is defined with (GL_QUADS). Only for OpenGL, then!"
+						-v off meshExportKeepQuads;
+
+			checkBox 	-label "Export anim. Curves" -align "left"
+						-annotation "Walk through connections and gather animation curves"
+						-v off exportAnimCurves;
+
+			checkBox 	-label "anim. Curves as Text" -align "left"
+						-annotation "export curves in a separate text file instead of baking them into the ck3d file"
+						-v off animCurvesAsText;
+
+			checkBox 	-label "anim. Curves Only" -align "left"
+						-annotation "export only curves. Nothing else"
+						-v off animCurvesOnly;
+
+			checkBox 	-label "Trim null Blendshape vtx" -align "left"
+						-annotation "Don't export vtx of BS that have no influence. Will lead to different sizes of BS ! Use VtxIdx attribute..."
+						-v off trimBS;
+
+			/*checkBox 	-label "Bounding volumes" -align "left"
+						-annotation "compute bounding volumes (AABB, BSphere)"
+						-v off meshBoundingVolumes;*/
+
+			setParent ..;
+			rowColumnLayout -numberOfColumns 3 attribslayout;
+
+      text -l "input slot";    text -l "Attributes";    text -l "Blendshape Attr.";
+      int $IDs[];
+      string $moreattrs[] = addBlindDataItems($IDs);
+			SetSlotNumber("slot0"); SetAttribChoice("attrib0", $moreattrs, $IDs); SetAttribChoice("bsattrib0", $moreattrs, $IDs);
+			SetSlotNumber("slot1"); SetAttribChoice("attrib1", $moreattrs, $IDs); SetAttribChoice("bsattrib1", $moreattrs, $IDs);
+			SetSlotNumber("slot2"); SetAttribChoice("attrib2", $moreattrs, $IDs); SetAttribChoice("bsattrib2", $moreattrs, $IDs);
+			SetSlotNumber("slot3"); SetAttribChoice("attrib3", $moreattrs, $IDs); SetAttribChoice("bsattrib3", $moreattrs, $IDs);
+			SetSlotNumber("slot4"); SetAttribChoice("attrib4", $moreattrs, $IDs); SetAttribChoice("bsattrib4", $moreattrs, $IDs);
+			SetSlotNumber("slot5"); SetAttribChoice("attrib5", $moreattrs, $IDs); SetAttribChoice("bsattrib5", $moreattrs, $IDs);
+			SetSlotNumber("slot6"); SetAttribChoice("attrib6", $moreattrs, $IDs); SetAttribChoice("bsattrib6", $moreattrs, $IDs);
+			SetSlotNumber("slot7"); SetAttribChoice("attrib7", $moreattrs, $IDs); SetAttribChoice("bsattrib7", $moreattrs, $IDs);
+			SetSlotNumber("slot8"); SetAttribChoice("attrib8", $moreattrs, $IDs); SetAttribChoice("bsattrib8", $moreattrs, $IDs);
+
+			setParent ..;
+
+			separator -style "in" -w 1000 meshExportSep;
+
+			formLayout -edit
+				-attachForm meshExportFileOptsLayout "top" 0
+				-attachControl meshExportSep "top" 5 meshExportFileOptsLayout
+				-attachControl attribslayout "top"	5 meshExportSep
+				meshExportForm;
+		setUITemplate -popTemplate;
+
+		//	Now to set the current settings.
+		//
+		$currentOptions = $initialSettings;
+		if (size($currentOptions) > 0) 
+		{
+			tokenize($currentOptions, ";", $optionList);
+			for ($index = 0; $index < size($optionList); $index++) 
+			{
+				tokenize($optionList[$index], "=", $optionBreakDown);
+				$dbgstr = "option token "+$optionBreakDown[0]+"="+$optionBreakDown[1]+"\n";
+				print $dbgstr;
+				if ($optionBreakDown[0] == "strips") 
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value meshExportStripChk;
+				/*} else if ($optionBreakDown[0] == "meshmender") 
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value meshExportMeshMenderChk;*/
+				} else if ($optionBreakDown[0] == "multiindex")
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value multiIndexChk;
+				} else if ($optionBreakDown[0] == "originalmesh")
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value originalMeshChk;
+				} else if ($optionBreakDown[0] == "worldposmesh")
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value worldPosChk;
+				} else if ($optionBreakDown[0] == "noshaders") 
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value meshExportNoShadersChk;
+				} else if ($optionBreakDown[0] == "adjtris") 
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value meshExportAdjTrisChk;
+				} else if ($optionBreakDown[0] == "deltabs") 
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value meshExportDeltaBSChk;
+				} else if ($optionBreakDown[0] == "keepquads") //for OGL Quads
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value meshExportKeepQuads;
+				} else if ($optionBreakDown[0] == "exportCVs")
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value exportAnimCurves;
+				} else if ($optionBreakDown[0] == "cvsAsText")
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value animCurvesAsText;
+				} else if ($optionBreakDown[0] == "cvsOnly")
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value animCurvesOnly;
+				} else if ($optionBreakDown[0] == "trimBS")
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value trimBS;
+				}/* else if ($optionBreakDown[0] == "bvols") 
+				{
+					int $value = $optionBreakDown[1];
+					checkBox -e -v $value meshBoundingVolumes;
+				}*/
+				
+				//
+				// enable/disable attributes
+				//
+				else if ($optionBreakDown[0] == "bsattrib0") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib0") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot0") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "bsattrib1") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib1") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot1") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "bsattrib2") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib2") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot2") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "bsattrib3") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib3") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot3") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "bsattrib4") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib4") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot4") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "bsattrib5") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib5") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot5") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "bsattrib6") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib6") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot6") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "bsattrib7") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib7") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot7") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "bsattrib8") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "attrib8") 
+				{
+					SetAttribState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+				else if ($optionBreakDown[0] == "slot8") 
+				{
+					SetSlotState($optionBreakDown[0], $optionBreakDown[1]);
+				}
+			}
+		}
+
+		columnLayout -e -vis true meshExportMultiObjLayout;
+
+		$result = 1;
+	} else 
+	//
+	// Query ACTION
+	//
+	if ($action == "query") {
+	  print "NVBinaryMeshExporterOptions(QUERY)...\n";
+		$currentOptions = ("strips="+`checkBox -q -v meshExportStripChk`);
+		//$currentOptions += (";meshmender="+`checkBox -q -v meshExportMeshMenderChk`);
+		$currentOptions += (";multiindex="+`checkBox -q -v multiIndexChk`);
+		$currentOptions += (";originalmesh="+`checkBox -q -v originalMeshChk`);
+		$currentOptions += (";worldposmesh="+`checkBox -q -v worldPosChk`);
+		$currentOptions += (";noshaders="+`checkBox -q -v meshExportNoShadersChk`);
+		$currentOptions += (";adjtris="+`checkBox -q -v meshExportAdjTrisChk`);
+		$currentOptions += (";deltabs="+`checkBox -q -v meshExportDeltaBSChk`);
+		$currentOptions += (";keepquads="+`checkBox -q -v meshExportKeepQuads`);
+		$currentOptions += (";exportCVs="+`checkBox -q -v exportAnimCurves`);
+		$currentOptions += (";cvsAsText="+`checkBox -q -v animCurvesAsText`);
+		$currentOptions += (";cvsOnly="+`checkBox -q -v animCurvesOnly`);
+		$currentOptions += (";trimBS="+`checkBox -q -v trimBS`);
+		//$currentOptions += (";bvols="+`checkBox -q -v meshBoundingVolumes`);
+		
+		$currentOptions += (";slot0="+GetAttribState("slot0"));
+		$currentOptions += (";attrib0="+GetAttribState("attrib0"));
+		$currentOptions += (";bsattrib0="+GetAttribState("bsattrib0"));
+		$currentOptions += (";slot1="+GetAttribState("slot1"));
+		$currentOptions += (";attrib1="+GetAttribState("attrib1"));
+		$currentOptions += (";bsattrib1="+GetAttribState("bsattrib1"));
+		$currentOptions += (";slot2="+GetAttribState("slot2"));
+		$currentOptions += (";attrib2="+GetAttribState("attrib2"));
+		$currentOptions += (";bsattrib2="+GetAttribState("bsattrib2"));
+		$currentOptions += (";slot3="+GetAttribState("slot3"));
+		$currentOptions += (";attrib3="+GetAttribState("attrib3"));
+		$currentOptions += (";bsattrib3="+GetAttribState("bsattrib3"));
+		$currentOptions += (";slot4="+GetAttribState("slot4"));
+		$currentOptions += (";attrib4="+GetAttribState("attrib4"));
+		$currentOptions += (";bsattrib4="+GetAttribState("bsattrib4"));
+		$currentOptions += (";slot5="+GetAttribState("slot5"));
+		$currentOptions += (";attrib5="+GetAttribState("attrib5"));
+		$currentOptions += (";bsattrib5="+GetAttribState("bsattrib5"));
+		$currentOptions += (";slot6="+GetAttribState("slot6"));
+		$currentOptions += (";attrib6="+GetAttribState("attrib6"));
+		$currentOptions += (";bsattrib6="+GetAttribState("bsattrib6"));
+		$currentOptions += (";slot7="+GetAttribState("slot7"));
+		$currentOptions += (";attrib7="+GetAttribState("attrib7"));
+		$currentOptions += (";bsattrib7="+GetAttribState("bsattrib7"));
+		$currentOptions += (";slot8="+GetAttribState("slot8"));
+		$currentOptions += (";attrib8="+GetAttribState("attrib8"));
+		$currentOptions += (";bsattrib8="+GetAttribState("bsattrib8"));
+		
+		$dbgstr = "eval("+$resultCallback+" \""+$currentOptions+"\")";
+		print $dbgstr;
+		eval($resultCallback+" \""+$currentOptions+"\"");
+
+		$result = 1;
+	} else {
+		$result = 0;
+	}
+	return $result;
+}
+
