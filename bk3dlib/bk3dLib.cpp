@@ -2335,7 +2335,7 @@ void    CBuffer::SetOwner(CPrimGroup *pg)
  */
 void CBone::SetParent(bk3dlib::PBone p)
 {
-    CBone* parent = static_cast<CBone*>(p->AsBone());
+    CBone* parent = p ? static_cast<CBone*>(p->AsBone()) : NULL;
     if(m_parentTransf)
     {
         std::vector<CBone*>::iterator iT = m_parentTransf->m_childrenTransf.begin();
