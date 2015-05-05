@@ -4,7 +4,7 @@ This code is available "as-is", without any warranty that it will work correctly
 
 I just made it available to help whoever wants to export something from Maya or look at the code as an example for another exporter. Better than keeping it for myself.
 
-This exporter if far from being *waterproof*... I do not claim to know Maya plugin SDK so I did what I could as a first draft. In the meantime, I created the bk3dlib and then modified it again.
+This exporter if far from being *waterproof*... I do not claim to know Maya plugin SDK so I did what I could as a first draft. In the meantime, I created the bk3dlib, a library that helps to create bk3d files (not needed to read them, though) and then modified the plugin again so that it goes through this library.
 
 ##Known Issues
 
