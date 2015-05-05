@@ -12,7 +12,7 @@ This exporter if far from being *waterproof*... I do not claim to know Maya plug
 It is very much possible that Maya complains due to the fact that it didn't find the script entry point (bk3dExporterOptions)... or didn't even find *bk3dExportOptions.mel*...
 Please refer to Maya documentation on how to make sure that it can locate the file containing the mel script for the plugin
 
-A temporary hack: copy the whole text from *bk3dExportOptions.mel* and paste it to the command-line script window of Maya, then "ctrl-enter"...
+A temporary hack: copy the whole text from *bk3dExportOptions.mel* and paste it to the command-line script window of Maya, then "ctrl-enter". See image below, at the end of this readme...
 
 ###failure to load the mll plugin
 Maya might also complain that it didn't find bk3dExporter.mll, although you specified the right path...
@@ -31,6 +31,22 @@ I recall that I encountered some issues when using a release build. If something
 ###exporting many times
 I am not 100% sure that I do clean-up everything once exported. There could still be some garbage preventing a second export to happen correctly.
 
+###Exported Transformations
+The bk3d transformations exported by this exporter are the **"bk3d::Transform"** struct. This is the most complicated transformation available in bk3d: it contains all what Maya needs to define transformations (verious pivots and whatnot).
+
+Joint transformation order (OpenGL order) :
+
+    P2 = Mtranslate * MjointOrient * Mrotation 
+         * Mrotorientation * Mscale * P
+
+Basic Transformation order :
+
+    P2 = MrotPivotTransl * MrotPivot * Mrotation * MrotOrient 
+         * MrotPivotInv * MscalePivotTransl * MscalePivot * Mscale 
+         * MscalePivotInv * P
+
+Useless to say that this is not the kind of transformation that one wants to keep for a game. It would be good to add some code that would simplify them to **"bk3d::Bone"** (simplest one) or at least **"bk3d::TransformSimple"**
+
 ##exporting
 
 When exporting 1 or more selected meshes, the associated objects that are needed for the mesh to be consistent will be fetched:
@@ -38,6 +54,7 @@ When exporting 1 or more selected meshes, the associated objects that are needed
  * transformations
  * Skinning info
  * Blendshape info
+ * animation curves
  * ...
 
 Thus it is not necessary to select the skeleton of a mesh to export the transforms needed for this mesh to work.
@@ -49,11 +66,13 @@ You will see that the options for exporting require you to explicitly choose how
  * Slots: are grouping attributes together in an interleaved way
  * Attribute: typically the kind of data for a vertex we want to export: position, normals, blendshape weights, tangent, binormal, color...
 
+![image](https://github.com/tlorach/Bak3d/raw/master/bk3dExport/doc/MAyaExporterOptions.PNG)
+
+*(1) about copying the script code in Maya*
+![script](https://github.com/tlorach/Bak3d/raw/master/bk3dExport/doc/cannotfindMELprocedure.PNG)
 
 ----------------------------------------------------------------------------
-````
     Copyright (c) 2013, Tristan Lorach. All rights reserved.
-
     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
     EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
     IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -65,4 +84,3 @@ You will see that the options for exporting require you to explicitly choose how
     OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-````
