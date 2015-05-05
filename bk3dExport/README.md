@@ -18,6 +18,10 @@ A temporary hack: copy the whole text from *bk3dExportOptions.mel* and paste it 
 Maya might also complain that it didn't find bk3dExporter.mll, although you specified the right path...
 One of the main reason for why it failed is that *zlib.dll* should be accessible for the bk3dExporter.mll to load. You could simply drop zlib.dll down to the exe folder where Maya.exe is located... or add it to the path env. variable
 
+2 other solutions against this:
+* build the project without linking with zlib
+* change the project to link with a static zlib version, rather than using the dll
+
 ###exporting a Maya scene
 For now, this plugin can **only** export selected meshes. If you didn't select any and try to export the whole scene, I don't think it is going to work...
 
