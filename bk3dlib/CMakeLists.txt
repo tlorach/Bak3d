@@ -27,6 +27,10 @@ set(SOURCES
   ${CPPFILESLEGACY}
   ${CPPFILES}
 )
+source_group(nv_math FILES
+  ${NV_MATH_SOURCE}
+  ${NV_MATH_HEADERS}
+)
 source_group(sources FILES ${SOURCES})
 source_group("" FILES ${PUBLIC_HEADERS})
 
@@ -35,6 +39,8 @@ add_library(bk3dlib STATIC
   ${PUBLIC_HEADERS}
   ${HEADERS}
   ${SOURCES}
+  ${NV_MATH_SOURCE}
+  ${NV_MATH_HEADERS}
 )
 
 set_target_properties( bk3dlib PROPERTIES FOLDER "bk3dlib" )
