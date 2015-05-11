@@ -768,6 +768,7 @@ INLINE static FileHeader * load(const char * fname, void ** pBufferMemory=NULL, 
     // splitting in 2 at least: huge files (4Gb would fail otherwize when through GZip lib)
     char *memory2b = memory2;
     unsigned LONG sz2 = realsize - modelStructSize;
+    unsigned LONG hsz2 = sz2/2; // change the divisor to split more than 2
     unsigned LONG rsz2 = sz2;
     while(rsz2 != 0)
     {
