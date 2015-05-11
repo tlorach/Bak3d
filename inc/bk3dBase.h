@@ -765,7 +765,18 @@ INLINE static FileHeader * load(const char * fname, void ** pBufferMemory=NULL, 
     n= GREAD(fd, memory + offs, modelStructSize - offs);
     // Now anything beyond this is Buffer Memory : vertex tables etc.
     char *memory2 = (char*)malloc(realsize - modelStructSize);
-    n= GREAD(fd, memory2, realsize - modelStructSize);
+    // splitting in 2 at least: huge files (4Gb would fail otherwize when through GZip lib)
+    char *memory2b = memory2;
+    unsigned LONG sz2 = realsize - modelStructSize;
+    unsigned LONG rsz2 = sz2;
+    while(rsz2 != 0)
+    {
+        unsigned LONG sz = rsz2 < hsz2 ? rsz2 : hsz2;
+        n= GREAD(fd, memory2b, sz);
+        memory2b += sz;
+        rsz2 -= sz;
+    }
+
     if(bufferMemorySz)
         *bufferMemorySz = n;
     if(pBufferMemory)
