@@ -212,10 +212,12 @@ add_subdirectory(bk3dinfo)
 add_subdirectory(bk3dlib)
 add_subdirectory(bk3dutil)
 add_subdirectory(examples)
-add_subdirectory(PyBk3d)
+if(PYTHON_FOUND)
+  add_subdirectory(PyBk3d)
+endif(PYTHON_FOUND)
 if(MAYA_FOUND)
   add_subdirectory(bk3dExport)
-endif()
+endif(MAYA_FOUND)
 
 ##################################################################
 # INSTALL
