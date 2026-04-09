@@ -1,3 +1,4 @@
+TODO: update it for Vulkan; remove 32 bits option
 This binary file contains some baked 3D data (read bak3d with an inverted 'E' ) very much ready to be sent down to graphic APIs.
 The idea is to provide in the most direct way the data that we need to render some geometry.
 
